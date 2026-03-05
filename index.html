@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOMI Course Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; padding: 0; background: transparent; }
+</style>
+</head>
+<body>
+<style>
+:root {
+  --navy:      #1B3A6B;
+  --navy-dark: #0D2340;
+  --cyan:      #00BFDF;
+  --orange:    #ef8c40;
+  --white:     #ffffff;
+  --bg:        #F5F7FA;
+  --border:    #DDE3EC;
+  --text:      #1A2435;
+  --muted:     #6B7A94;
+  --hover:     #EEF3FB;
+  --stripe:    #F9FAFC;
+  --group-bg:  #EDF1F8;
+}
+
+.bomi-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  font-family: 'Archivo', sans-serif;
+}
+.bomi-filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+}
+.bomi-chip {
+  font-family: 'Archivo', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.bomi-chip:hover  { border-color: var(--navy); color: var(--navy); }
+.bomi-chip.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+
+.bomi-search-wrap { margin-left: auto; position: relative; display: flex; align-items: center; }
+.bomi-search-wrap svg { position: absolute; left: 10px; color: var(--muted); pointer-events: none; }
+#bomiSearch {
+  font-family: 'Archivo', sans-serif;
+  font-size: 13px;
+  padding: 7px 12px 7px 32px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  width: 220px;
+  transition: border-color 0.15s;
+}
+#bomiSearch:focus { border-color: var(--navy); }
+#bomiSearch::placeholder { color: var(--muted); }
+
+.bomi-status {
+  font-family: 'Archivo', sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bomi-status a {
+  color: var(--navy);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 12px;
+}
+.bomi-status a:hover { text-decoration: underline; }
+#bomiCount { font-weight: 500; }
+
+.bomi-table-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  font-family: 'Archivo', sans-serif;
+}
+
+.bomi-table { width: 100%; border-collapse: collapse; }
+
+.bomi-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+  padding: 11px 16px;
+  text-align: left;
+  background: var(--stripe);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+}
+.bomi-table thead th:hover { color: var(--navy); }
+.bomi-table thead th:last-child { cursor: default; }
+.bomi-table thead th .si { margin-left: 4px; font-size: 10px; opacity: 0.4; }
+.bomi-table thead th.sa .si::after { content: '▲'; opacity: 1; }
+.bomi-table thead th.sd .si::after { content: '▼'; opacity: 1; }
+.bomi-table thead th:not(.sa):not(.sd) .si::after { content: '⬍'; }
+
+.bomi-table tr.gr td {
+  background: var(--group-bg);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+  border-top: 2px solid var(--border);
+}
+.bomi-table tr.gr.hidden { display: none; }
+.bomi-table tr.gr td .prog {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 10px;
+}
+
+.bomi-table tr.dr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.bomi-table tr.dr:last-child { border-bottom: none; }
+.bomi-table tr.dr:hover { background: var(--hover); }
+.bomi-table tr.dr.hidden { display: none; }
+.bomi-table td { padding: 11px 16px; vertical-align: middle; font-size: 13.5px; color: var(--text); }
+
+.dl { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 100px; white-space: nowrap; }
+.dl-online    { background: rgba(0,191,223,0.12);  color: #007fa3; }
+.dl-collab    { background: rgba(27,58,107,0.1);   color: #1B3A6B; }
+.dl-virtual   { background: rgba(27,58,107,0.07);  color: #3a5c9a; }
+.dl-classroom { background: rgba(13,35,64,0.07);   color: #0D2340; }
+.dl-accel     { background: rgba(27,58,107,0.05);  color: #4a6aaa; }
+
+.oa { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: #007fa3; }
+.oa::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); animation: bomi-blink 2.2s ease-in-out infinite; }
+@keyframes bomi-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.rb {
+  display: inline-block;
+  background: var(--orange);
+  color: var(--white) !important;
+  font-family: 'Archivo', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.rb:hover { background: #d4732e; }
+
+.bomi-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-family: 'Archivo', sans-serif;
+  font-size: 14px;
+}
+.bomi-error {
+  padding: 20px;
+  text-align: center;
+  color: #c0392b;
+  font-family: 'Archivo', sans-serif;
+  font-size: 13px;
+  background: rgba(192,57,43,0.05);
+  border-radius: 6px;
+}
+
+#bomiNoResults {
+  display: none;
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  font-family: 'Archivo', sans-serif;
+}
+</style>
+
+<!-- TOOLBAR -->
+<div class="bomi-toolbar">
+  <span class="bomi-filter-label">Filter</span>
+  <button class="bomi-chip active" onclick="bomiFilter('all',this)">All</button>
+  <button class="bomi-chip" onclick="bomiFilter('Online Self-Paced',this)">Online Self-Paced</button>
+  <button class="bomi-chip" onclick="bomiFilter('Live Virtual',this)">Live Virtual</button>
+  <button class="bomi-chip" onclick="bomiFilter('Collaborative Virtual',this)">Collaborative Virtual</button>
+  <button class="bomi-chip" onclick="bomiFilter('Classroom',this)">Classroom</button>
+  <button class="bomi-chip" onclick="bomiFilter('Accelerated Review',this)">Accelerated Review</button>
+  <div class="bomi-search-wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="bomiSearch" placeholder="Search course, location, sponsor&hellip;" oninput="bomiSearchFn(this.value)">
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+
+<!-- TABLE -->
+<div class="bomi-table-wrap">
+  <div class="bomi-loading" id="bomiLoading">Loading course schedule&hellip;</div>
+  <table class="bomi-table" id="bomiTable" style="display:none">
+    <thead>
+      <tr>
+        <th onclick="bomiSort(0)">Delivery <span class="si"></span></th>
+        <th onclick="bomiSort(1)">Date <span class="si"></span></th>
+        <th onclick="bomiSort(2)">Location <span class="si"></span></th>
+        <th onclick="bomiSort(3)">Sponsor <span class="si"></span></th>
+        <th style="width:120px; cursor:default"></th>
+      </tr>
+    </thead>
+    <tbody id="bomiBody"></tbody>
+  </table>
+  <div id="bomiNoResults">No sessions match your search.</div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────
+// Replace this with your Google Sheet's published CSV URL.
+// In Google Sheets: File → Share → Publish to web → Sheet1 → CSV → Publish
+// Paste the URL below:
+const SHEET_CSV_URL = 'https://script.google.com/macros/s/AKfycbyVRVXe74D_XlOgQaSHUg2IN7vnFcG9KgWgAoAPpn4AVK5kHAM411x56SdtmLr1VOgc1A/exec';
+
+// Expected column order in your Google Sheet:
+// A: Course | B: Program | C: Delivery | D: Date | E: Location | F: Sponsor | G: Register URL
+// ────────────────────────────────────────────────────────────────────────
+
+const DELIVERY_CLASSES = {
+  'online self-paced':      'dl-online',
+  'live virtual':           'dl-virtual',
+  'collaborative virtual':  'dl-collab',
+  'classroom':              'dl-classroom',
+  'accelerated review':     'dl-accel',
+};
+
+let allRows = [];
+let currentFilter = 'all';
+let currentSearch = '';
+let sortCol = -1;
+let sortAsc = true;
+
+// ── FETCH & PARSE CSV ───────────────────────────────────────────────────
+async function bomiInit() {
+  try {
+    const res = await fetch(SHEET_CSV_URL);
+    if (!res.ok) throw new Error('Failed to fetch');
+    const text = await res.text();
+    allRows = parseCSV(text);
+    buildTable(allRows);
+    document.getElementById('bomiLoading').style.display = 'none';
+    document.getElementById('bomiTable').style.display = 'table';
+    bomiUpdateCount();
+  } catch(e) {
+    document.getElementById('bomiLoading').innerHTML =
+      '<div class="bomi-error">Could not load course data. Please check that your Google Sheet is published as CSV and the URL is correct.</div>';
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const rows = [];
+  // Skip header row (row 0)
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitCSVLine(lines[i]);
+    if (cols.length < 6 || !cols[0].trim()) continue;
+    rows.push({
+      course:   cols[0].trim(),
+      program:  cols[1] ? cols[1].trim() : '',
+      delivery: cols[2] ? cols[2].trim() : '',
+      date:     cols[3] ? cols[3].trim() : '',
+      location: cols[4] ? cols[4].trim() : '',
+      sponsor:  cols[5] ? cols[5].trim() : '',
+      url:      cols[6] ? cols[6].trim() : '',
+    });
+  }
+  return rows;
+}
+
+function splitCSVLine(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+// ── BUILD TABLE ─────────────────────────────────────────────────────────
+function buildTable(rows) {
+  const tbody = document.getElementById('bomiBody');
+  tbody.innerHTML = '';
+
+  // Group by course
+  const groups = {};
+  const order = [];
+  rows.forEach(r => {
+    if (!groups[r.course]) { groups[r.course] = { program: r.program, sessions: [] }; order.push(r.course); }
+    groups[r.course].sessions.push(r);
+  });
+
+  order.forEach(courseName => {
+    const g = groups[courseName];
+
+    // Group header row
+    const gr = document.createElement('tr');
+    gr.className = 'gr';
+    gr.dataset.group = courseName;
+    gr.innerHTML = `<td colspan="5">${courseName}${g.program ? ` <span class="prog">${g.program}</span>` : ''}</td>`;
+    tbody.appendChild(gr);
+
+    // Session rows
+    g.sessions.forEach(r => {
+      const deliveryKey = r.delivery.toLowerCase();
+      const dlClass = DELIVERY_CLASSES[deliveryKey] || 'dl-online';
+      const isAnytime = r.delivery.toLowerCase() === 'online self-paced';
+      const dateCell = isAnytime ? `<span class="oa">Begin Anytime</span>` : r.date;
+
+      const tr = document.createElement('tr');
+      tr.className = 'dr';
+      tr.dataset.course = courseName;
+      tr.dataset.delivery = r.delivery;
+      tr.innerHTML = `
+        <td><span class="dl ${dlClass}">${r.delivery}</span></td>
+        <td>${dateCell}</td>
+        <td>${r.location}</td>
+        <td>${r.sponsor}</td>
+        <td>${r.url ? `<a href="${r.url}" class="rb" target="_blank">Register</a>` : ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+// ── FILTER ──────────────────────────────────────────────────────────────
+function bomiFilter(type, btn) {
+  document.querySelectorAll('.bomi-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = type;
+  document.getElementById('bomiSearch').value = '';
+  currentSearch = '';
+  bomiApplyFilters();
+}
+
+function bomiSearchFn(q) {
+  currentSearch = q.toLowerCase().trim();
+  document.querySelectorAll('.bomi-chip').forEach(c => c.classList.remove('active'));
+  currentFilter = 'all';
+  bomiApplyFilters();
+}
+
+function bomiApplyFilters() {
+  const groups = {};
+  document.querySelectorAll('tr.dr').forEach(row => {
+    const delivery = (row.dataset.delivery || '').toLowerCase();
+    const text     = row.textContent.toLowerCase();
+    const course   = row.dataset.course || '';
+    const matchF   = currentFilter === 'all' || delivery === currentFilter.toLowerCase();
+    const matchS   = !currentSearch || text.includes(currentSearch);
+    const show     = matchF && matchS;
+    row.classList.toggle('hidden', !show);
+    if (!groups[course]) groups[course] = false;
+    if (show) groups[course] = true;
+  });
+  document.querySelectorAll('tr.gr').forEach(gr => {
+    gr.classList.toggle('hidden', !groups[gr.dataset.group]);
+  });
+  bomiUpdateCount();
+}
+
+// ── SORT ────────────────────────────────────────────────────────────────
+function bomiSort(col) {
+  const ths = document.querySelectorAll('.bomi-table thead th');
+  ths.forEach(th => th.classList.remove('sa','sd'));
+  sortAsc = sortCol === col ? !sortAsc : true;
+  sortCol = col;
+  ths[col].classList.add(sortAsc ? 'sa' : 'sd');
+
+  const tbody = document.getElementById('bomiBody');
+  const groups = [];
+  let current = null;
+  Array.from(tbody.children).forEach(row => {
+    if (row.classList.contains('gr')) {
+      current = { header: row, rows: [] };
+      groups.push(current);
+    } else if (row.classList.contains('dr') && current) {
+      current.rows.push(row);
+    }
+  });
+  groups.forEach(g => {
+    g.rows.sort((a, b) => {
+      const at = a.cells[col] ? a.cells[col].textContent.trim() : '';
+      const bt = b.cells[col] ? b.cells[col].textContent.trim() : '';
+      return sortAsc ? at.localeCompare(bt) : bt.localeCompare(at);
+    });
+    g.rows.forEach(r => tbody.appendChild(r));
+  });
+}
+
+// ── COUNT ───────────────────────────────────────────────────────────────
+function bomiUpdateCount() {
+  const vis = document.querySelectorAll('tr.dr:not(.hidden)').length;
+  const tot = document.querySelectorAll('tr.dr').length;
+  document.getElementById('bomiCount').textContent =
+    vis === tot ? `${tot} sessions` : `${vis} of ${tot} sessions`;
+  document.getElementById('bomiNoResults').style.display = vis === 0 ? 'block' : 'none';
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────
+bomiInit();
+</script>
+
+</body>
+</html>
